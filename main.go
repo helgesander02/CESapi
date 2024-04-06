@@ -71,8 +71,11 @@ func convertCurrency(c *gin.Context) {
 	var amount float64
 	var err error
 	if amount, err = strconv.ParseFloat(amountStr, 64); err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid amount format"})
-		return
+		str := strings.Replace(amountStr, ",", "", -1)
+		if amount, err = strconv.ParseFloat(str, 64); err != nil {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"message": "Invalid amount format"})
+			return
+		}
 	}
 
 	// Find source item
