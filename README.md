@@ -1,5 +1,5 @@
 # CESapi
-### This is a Currency Exchange Service API that uses dependency injection and TDD design.
+### This is a Currency Exchange Service API that uses dependency injection design.
 
 ## RUN
 * docker build -t 'cesapi' .

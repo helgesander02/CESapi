@@ -1,15 +1,14 @@
 package main
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type SourceItem struct {
-	Source  string       `json:"source"`
-	Targets []TargetItem `json:"targets"`
+	Source  string        `json:"source"`
+	Targets []*TargetItem `json:"targets"`
 }
 
 type TargetItem struct {
@@ -17,61 +16,41 @@ type TargetItem struct {
 	FX     float64 `json:"fx"`
 }
 
+func NewTargetItems(twd float64, jpy float64, usd float64) []*TargetItem {
+	return []*TargetItem{
+		{Target: "TWD", FX: twd},
+		{Target: "JPY", FX: jpy},
+		{Target: "USD", FX: usd},
+	}
+}
+
+// TargetItem inject SourceItem
+// Reference https://tehub.com/a/c0W0jZ5qR8
+func NewSourceItem(sourcename string, targetItem []*TargetItem) *SourceItem {
+	return &SourceItem{Source: sourcename, Targets: targetItem}
+}
+
 var (
+	// Currency exchange rates
+	TWDch = NewTargetItems(1, 3.669, 0.03281)
+	JPYch = NewTargetItems(0.26956, 1, 0.00885)
+	USDch = NewTargetItems(30.444, 111.801, 1)
+
 	//
-	TWDch = []TargetItem{
-		{Target: "TWD", FX: 1},
-		{Target: "JPY", FX: 3.669},
-		{Target: "USD", FX: 0.03281},
-	}
-	JPYch = []TargetItem{
-		{Target: "TWD", FX: 0.26956},
-		{Target: "JPY", FX: 1},
-		{Target: "USD", FX: 0.00885},
-	}
-	USDch = []TargetItem{
-		{Target: "TWD", FX: 30.444},
-		{Target: "JPY", FX: 111.801},
-		{Target: "USD", FX: 1},
-	}
+	TWD = NewSourceItem("TWD", TWDch)
+	JPY = NewSourceItem("JPY", JPYch)
+	USD = NewSourceItem("USD", USDch)
+
 	//
-	TWD = SourceItem{Source: "TWD", Targets: TWDch}
-	JPY = SourceItem{Source: "JPY", Targets: JPYch}
-	USD = SourceItem{Source: "USD", Targets: USDch}
-	//
-	Currencies = []SourceItem{TWD, JPY, USD}
+	Currencies = []*SourceItem{TWD, JPY, USD}
 )
 
 func getCurrencies(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, Currencies)
 }
 
-func getSource(c *gin.Context) {
-	source := c.Query("source")
-	sourceitem, err := getItemBySource(source)
-
-	if err != nil {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "Not found"})
-	}
-
-	c.IndentedJSON(http.StatusOK, sourceitem)
-}
-
-func getItemBySource(source string) (*SourceItem, error) {
-	for _, item := range Currencies {
-		if item.Source == source {
-			return &item, nil
-		}
-	}
-
-	return nil, errors.New("todo not found")
-}
-
 func main() {
 	r := gin.Default()
-
 	r.GET("/", getCurrencies)
-	r.GET("/source", getSource)
-
 	r.Run()
 }
