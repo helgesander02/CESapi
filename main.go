@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -89,7 +91,7 @@ func convertCurrency(c *gin.Context) {
 
 	// Perform conversion calculation
 	convertedAmount := amount * conversionRate
-	ca := convertedAmount
+	ca := formatAmount(convertedAmount)
 
 	// Respond with conversion result
 	c.IndentedJSON(http.StatusOK, gin.H{
@@ -119,6 +121,23 @@ func getItemBySource(source string) (*SourceItem, error) {
 		}
 	}
 	return nil, errors.New("source currency not found")
+}
+
+// Round to two decimal places and add a thousand separator
+func formatAmount(num float64) string {
+	roundedNumber := fmt.Sprintf("%.2f", num)
+	parts := strings.Split(roundedNumber, ".")
+	intPart, fracPart := parts[0], parts[1]
+	intPartWithCommas := addCommas(intPart)
+	return intPartWithCommas + "." + fracPart
+}
+
+func addCommas(s string) string {
+	n := len(s)
+	if n <= 3 {
+		return s
+	}
+	return addCommas(s[:n-3]) + "," + s[n-3:]
 }
 
 // main
